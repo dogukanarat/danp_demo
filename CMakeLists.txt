@@ -7,6 +7,19 @@ list(APPEND ZEPHYR_EXTRA_MODULES
 )
 
 find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
-project(my_nucleo_app)
+project(danp_demo)
 
-target_sources(app PRIVATE src/main.c)
+set(SOURCES
+    src/main.c
+    src/server.c
+    src/client.c
+    src/utilities.c
+    src/shell.c
+)
+
+set(INCLUDE_DIRS
+    include
+)
+
+target_sources(app PRIVATE ${SOURCES})
+target_include_directories(app PRIVATE ${INCLUDE_DIRS})
