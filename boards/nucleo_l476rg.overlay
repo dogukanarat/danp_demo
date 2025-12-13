@@ -14,7 +14,7 @@
     cs-gpios = <&gpioa 8 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
 
     sx1262_0: sx1262@0 {
-        compatible = "da,sx1262-radio";
+        compatible = "da,sx126x-radio";
         reg = <0>; // Chip select index
         status = "okay";
         label = "SX1262_0";

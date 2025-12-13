@@ -96,6 +96,49 @@ static const ralf_params_lora_cad_t default_lora_cad_param = {
 
 /* Functions */
 
+int rx_thread(struct device *radio)
+{
+    int ret = 0;
+    ralf_params_lora_t rx_params = {0};
+    struct radio_ctrl_stats stats = {0};
+    struct radio_ctrl_msg_stats msg_stats = {0};
+
+    radio_ctrl_flush_rx_queue(radio);
+
+    radio_ctrl_listen(radio, UINT32_MAX);
+    uint8_t payload[255] = {0};
+
+    ret = radio_ctrl_receive(radio, payload, sizeof(payload), &msg_stats, UINT32_MAX);
+    if (ret > 0) {
+        // Successful reception
+        printk("Received payload: ");
+        for (size_t i = 0; i < ret; i++) {
+            printk("%02X ", payload[i]);
+        }
+        printk("\n");
+        printk("RSSI: %d dBm, SNR: %d dB, Signal RSSI: %d dBm\n",
+                msg_stats.rssi, msg_stats.snr, msg_stats.signal_rssi);
+    } else {
+        // Reception error
+        printk("Receive error: %d\n", ret);
+    }
+
+    return 0;
+}
+
+int tx_thread(struct device *radio)
+{
+    int ret = 0;
+    struct radio_ctrl_stats stats = {0};
+    uint8_t payload[] = "hello";
+
+    radio_ctrl_transmit(radio, payload, sizeof(payload));
+    radio_ctrl_get_stats(radio, &stats);
+    printk("TX Success: %d/%d, TX Timeout: %d/%d\n", stats.tx_success, stats.tx_attempts, stats.tx_timeout, stats.tx_attempts);
+
+    return 0;
+}
+
 int main(void) {
     int ret;
 
@@ -109,7 +152,7 @@ int main(void) {
     default_lora_tx_param.mod_params.ldro = ral_compute_lora_ldro(
         default_lora_tx_param.mod_params.sf, default_lora_tx_param.mod_params.bw);
 
-    radio_ctrl_config(radio, &defaukt_lora_rx_param, &default_lora_tx_param,
+    radio_ctrl_set_config_lora(radio, &defaukt_lora_rx_param, &default_lora_tx_param,
                     &default_lora_cad_param);
 
     // printk("DANP Demo Application\n");
@@ -128,9 +171,14 @@ int main(void) {
     // client_init();
 
     while (1) {
-        uint8_t payload[] = "hello";
-        radio_ctrl_transmit(radio, payload, sizeof(payload));
-        k_msleep(1000); // Sleep for 1 second
+#if RX_MODE == 1
+        rx_thread(radio);
+#elif TX_MODE == 1
+        tx_thread(radio);
+#else
+        printk("Please define RX_MODE or TX_MODE\n");
+#endif
     }
+
     return 0;
 }

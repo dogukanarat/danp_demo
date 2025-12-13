@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.20.0)
 list(APPEND ZEPHYR_EXTRA_MODULES 
     ${CMAKE_CURRENT_SOURCE_DIR}/libraries/osal
     ${CMAKE_CURRENT_SOURCE_DIR}/libraries/danp
-    ${CMAKE_CURRENT_SOURCE_DIR}/../modules/zephyr-radio
+    ${CMAKE_CURRENT_SOURCE_DIR}/libraries/zephyr-radio
 )
 
 find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
@@ -21,8 +21,6 @@ set(SOURCES
 set(INCLUDE_DIRS
     include
 )
-
-
 
 # set(DEPS)
 
