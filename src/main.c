@@ -175,6 +175,7 @@ int main(void) {
         rx_thread(radio);
 #elif TX_MODE == 1
         tx_thread(radio);
+        k_sleep(K_MSEC(5000));
 #else
         printk("Please define RX_MODE or TX_MODE\n");
 #endif
