@@ -1,0 +1,29 @@
+#include <zephyr/dt-bindings/spi/spi.h>
+#include <zephyr/dt-bindings/gpio/gpio.h>
+
+/ {
+    aliases {
+        radio0 = &sx1262_0;
+    };
+
+};
+
+&spi1 {
+    compatible = "st,stm32-spi-fifo", "st,stm32-spi";
+    status = "okay";
+    cs-gpios = <&gpioa 8 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+
+    sx1262_0: sx1262@0 {
+        compatible = "da,sx1262-radio";
+        reg = <0>; // Chip select index
+        status = "okay";
+        label = "SX1262_0";
+
+        spi-max-frequency = <1000000>;
+
+        nreset-gpios = <&gpioa 0 GPIO_ACTIVE_HIGH>;
+        busy-gpios = <&gpiob 3 GPIO_ACTIVE_HIGH>;
+        dio1-gpios = <&gpiob 4 GPIO_ACTIVE_HIGH>;
+        antenna-switch-gpios = <&gpioa 9 GPIO_ACTIVE_HIGH>;
+    };
+};

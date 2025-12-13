@@ -8,13 +8,13 @@
             "servertype": "openocd",
             "cwd": "${workspaceFolder}",
             "executable": "${workspaceFolder}/build/zephyr/zephyr.elf",
-            "device": "STM32F7xx",
+            "device": "STM32L4xx",
             "configFiles": [
                 "interface/stlink.cfg",
-                "target/stm32f7x.cfg"
+                "target/stm32l4x.cfg"
             ],
             "runToEntryPoint": "main",
-            "preLaunchTask": "",
+            "preLaunchTask": "Zephyr: Build",
             "svdFile": "",
             "armToolchainPath": "",
             "showDevDebugOutput": "none"
