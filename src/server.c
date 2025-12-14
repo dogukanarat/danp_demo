@@ -24,8 +24,8 @@ LOG_MODULE_REGISTER(server, LOG_LEVEL_DBG);
 /* Types */
 
 typedef struct {
-    danpSocket_t *serverSock;
-    danpSocket_t *clientSock;
+    danp_socket_t *serverSock;
+    danp_socket_t *clientSock;
     int32_t ret;
     uint8_t buffer[DANP_MAX_PACKET_SIZE];
     int32_t received;
@@ -50,21 +50,21 @@ void server_stream_thread(void *p1, void *p2, void *p3)
 {
     serverRamData_t *ramData = (serverRamData_t *)p1;
 
-    ramData->serverSock = danpSocket(DANP_TYPE_STREAM);
+    ramData->serverSock = danp_socket(DANP_TYPE_STREAM);
     if (!ramData->serverSock)
     {
         LOG_ERR("Failed to create socket");
         return;
     }
 
-    ramData->ret = danpBind(ramData->serverSock, SERVER_STREAM_PORT);
+    ramData->ret = danp_bind(ramData->serverSock, SERVER_STREAM_PORT);
     if (ramData->ret < 0)
     {
         LOG_ERR("Failed to bind socket");
         return;
     }
 
-    ramData->ret = danpListen(ramData->serverSock, 1);
+    ramData->ret = danp_listen(ramData->serverSock, 1);
     if (ramData->ret < 0)
     {
         LOG_ERR("Failed to listen on socket");
@@ -76,12 +76,12 @@ void server_stream_thread(void *p1, void *p2, void *p3)
     while (1)
     {
         LOG_DBG("Waiting for client connection...");
-        ramData->clientSock = danpAccept(ramData->serverSock, DANP_WAIT_FOREVER);
+        ramData->clientSock = danp_accept(ramData->serverSock, DANP_WAIT_FOREVER);
         if (ramData->clientSock)
         {
             LOG_INF("Client connected");
 
-            while((ramData->received = danpRecv(ramData->clientSock, ramData->buffer, sizeof(ramData->buffer), SOCK_TIMEOUT)) > 0)
+            while((ramData->received = danp_recv(ramData->clientSock, ramData->buffer, sizeof(ramData->buffer), SOCK_TIMEOUT)) > 0)
             {
                 // Convert received data to hex string for logging
                 for (int i = 0; i < ramData->received; i++) {
@@ -91,11 +91,11 @@ void server_stream_thread(void *p1, void *p2, void *p3)
 
                 LOG_INF("Received %d bytes: %s", ramData->received, ramData->hexMsg);
                 // Echo back the received data
-                danpSend(ramData->clientSock, ramData->buffer, ramData->received);
+                danp_send(ramData->clientSock, ramData->buffer, ramData->received);
                 LOG_INF("Echoed back %d bytes", ramData->received);
             }
             LOG_INF("Client disconnected or recv error");
-            danpClose(ramData->clientSock);
+            danp_close(ramData->clientSock);
         }
     }
 }
@@ -106,14 +106,14 @@ void server_dgram_thread(void *p1, void *p2, void *p3)
     uint16_t dstNode;
     uint16_t dstPort;
 
-    ramData->serverSock = danpSocket(DANP_TYPE_DGRAM);
+    ramData->serverSock = danp_socket(DANP_TYPE_DGRAM);
     if (!ramData->serverSock)
     {
         LOG_ERR("Failed to create socket");
         return;
     }
 
-    ramData->ret = danpBind(ramData->serverSock, SERVER_DGRAM_PORT);
+    ramData->ret = danp_bind(ramData->serverSock, SERVER_DGRAM_PORT);
     if (ramData->ret < 0)
     {
         LOG_ERR("Failed to bind socket");
@@ -125,18 +125,18 @@ void server_dgram_thread(void *p1, void *p2, void *p3)
     while (1)
     {
         LOG_DBG("Waiting for datagram...");
-        ramData->received = danpRecvFrom(
-            ramData->serverSock, 
-            ramData->buffer, 
-            sizeof(ramData->buffer), 
-            &dstNode, 
-            &dstPort, 
+        ramData->received = danp_recv_from(
+            ramData->serverSock,
+            ramData->buffer,
+            sizeof(ramData->buffer),
+            &dstNode,
+            &dstPort,
             DANP_WAIT_FOREVER);
         if (ramData->received >= 0)
         {
             LOG_INF("Received %d bytes from client", ramData->received);
             // Echo back the received data
-            danpSendTo(ramData->serverSock, ramData->buffer, ramData->received, dstNode, dstPort);
+            danp_send_to(ramData->serverSock, ramData->buffer, ramData->received, dstNode, dstPort);
             LOG_INF("Echoed back %d bytes", ramData->received);
         }
     }
@@ -148,7 +148,7 @@ int32_t server_init(void)
     k_tid_t server_tid;
 
     for (;;)
-    {         
+    {
         server_tid = k_thread_create(&server_stream_data, server_stream_stack, K_THREAD_STACK_SIZEOF(server_stream_stack),
                                      server_stream_thread, &serverStreamRamData, NULL, NULL,
                                      PRIORITY, 0, K_NO_WAIT);

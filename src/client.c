@@ -33,7 +33,7 @@ struct k_thread client_data;
 
 void client_thread(void *p1, void *p2, void *p3)
 {
-    danpSocket_t *sock;
+    danp_socket_t *sock;
     int32_t ret;
     char *msg[32];
     uint32_t msgCount = 0;
@@ -46,7 +46,7 @@ void client_thread(void *p1, void *p2, void *p3)
     printk("Client: Starting...\n");
 
     while (1) {
-        sock = danpSocket(DANP_TYPE_STREAM);
+        sock = danp_socket(DANP_TYPE_STREAM);
         if (!sock) {
             printk("Client: Failed to create socket\n");
             k_sleep(K_SECONDS(1));
@@ -54,26 +54,26 @@ void client_thread(void *p1, void *p2, void *p3)
         }
 
         printk("Client: Connecting to server...\n");
-        ret = danpConnect(sock, LOCAL_NODE, SERVER_STREAM_PORT);
+        ret = danp_connect(sock, LOCAL_NODE, SERVER_STREAM_PORT);
         if (ret == 0) {
             printk("Client: Connected\n");
 
             sprintf(msg, "Message %d from client", msgCount++);
             printk("Client: Sending '%s'\n", msg);
-            danpSend(sock, msg, strlen(msg));
+            dan_send(sock, msg, strlen(msg));
 
-            received = danpRecv(sock, buffer, sizeof(buffer), 1000);
+            received = danp_recv(sock, buffer, sizeof(buffer), 1000);
             if (received > 0) {
                 buffer[received] = '\0';
                 printk("Client: Received echo '%s'\n", buffer);
             } else {
                 printk("Client: Receive timeout or error\n");
             }
-            
-            danpClose(sock);
+
+            danp_close(sock);
         } else {
             printk("Client: Failed to connect\n");
-            danpClose(sock);
+            danp_close(sock);
         }
 
         k_sleep(K_SECONDS(2));

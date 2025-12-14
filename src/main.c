@@ -8,12 +8,12 @@
 #include <zephyr/drivers/radio_ctrl.h>
 #include <zephyr/kernel.h>
 #include <zephyr/sys/printk.h>
-// #include "danp/drivers/danpLo.h"
-// #include "danp/danp.h"
-// #include "common_definitions.h"
-// #include "utilities.h"
-// #include "server.h"
-// #include "client.h"
+#include "danp/drivers/danp_lo.h"
+#include "danp/danp.h"
+#include "common_definitions.h"
+#include "utilities.h"
+#include "server.h"
+#include "client.h"
 
 /* Imports */
 
@@ -96,7 +96,7 @@ static const ralf_params_lora_cad_t default_lora_cad_param = {
 
 /* Functions */
 
-int rx_thread(struct device *radio)
+int rx_thread(const struct device *radio)
 {
     int ret = 0;
     ralf_params_lora_t rx_params = {0};
@@ -126,7 +126,7 @@ int rx_thread(struct device *radio)
     return 0;
 }
 
-int tx_thread(struct device *radio)
+int tx_thread(const struct device *radio)
 {
     int ret = 0;
     struct radio_ctrl_stats stats = {0};
@@ -155,20 +155,20 @@ int main(void) {
     radio_ctrl_set_config_lora(radio, &defaukt_lora_rx_param, &default_lora_tx_param,
                     &default_lora_cad_param);
 
-    // printk("DANP Demo Application\n");
+    printk("DANP Demo Application\n");
 
-    // danpLoInterface_t ifaceLo;
-    // danpConfig_t config = {
-    //     .localNode = LOCAL_NODE,
-    //     .logFunction = logMessage,
-    // };
+    danp_lo_interface_t ifaceLo;
+    danp_config_t config = {
+        .local_node = LOCAL_NODE,
+        .log_function = danp_log_message_impl,
+    };
 
-    // danpLoInit(&ifaceLo, LOCAL_NODE);
-    // danpInit(&config);
-    // danpRegisterInterface(&ifaceLo);
+    danp_lo_init(&ifaceLo, LOCAL_NODE);
+    danp_init(&config);
+    danp_register_interface(&ifaceLo);
 
-    // server_init();
-    // client_init();
+    server_init();
+    client_init();
 
     while (1) {
 #if RX_MODE == 1

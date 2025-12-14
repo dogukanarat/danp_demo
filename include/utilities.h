@@ -27,8 +27,8 @@ extern "C" {
 
 /* External Declarations */
 
-extern void logMessage(
-    danpLogLevel_t level,
+extern void danp_log_message_impl(
+    danp_log_level_t level,
     const char *funcName,
     const char *message,
     va_list args);

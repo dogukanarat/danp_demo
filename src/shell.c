@@ -69,7 +69,7 @@ static int danp_transaction(const struct shell *shell, size_t argc, char **argv)
         return -EINVAL;
     }
 
-    danpSocket_t *sock;
+    danp_socket_t *sock;
     int32_t ret;
     uint8_t buffer[DANP_MAX_PACKET_SIZE];
     int32_t received = 0;
@@ -106,7 +106,7 @@ static int danp_transaction(const struct shell *shell, size_t argc, char **argv)
     return 0;
 }
 
-static int danp_test(const struct shell *shell, size_t argc, char **argv) 
+static int danp_test(const struct shell *shell, size_t argc, char **argv)
 {
     int ret = 0;
     if (argc < 7) {
@@ -120,7 +120,7 @@ static int danp_test(const struct shell *shell, size_t argc, char **argv)
     uint16_t id = (uint16_t)atoi(argv[4]);
     uint16_t dPort = (uint16_t)atoi(argv[5]);
     int interval = atoi(argv[6]);
-    danpSocket_t *sock = NULL;
+    danp_socket_t *sock = NULL;
     uint8_t *tx_buf = NULL;
     uint8_t *rx_buf = NULL;
 
@@ -134,16 +134,16 @@ static int danp_test(const struct shell *shell, size_t argc, char **argv)
         }
 
         shell_print(shell, "Running DANP test: type=%s, count=%d, size=%d, id=%u, dPort=%u",
-                    type, 
-                    count, 
-                    size, 
-                    id, 
+                    type,
+                    count,
+                    size,
+                    id,
                     dPort);
 
         if (strcmp(type, "dgram") == 0) {
-            sock = danpSocket(DANP_TYPE_DGRAM);
+            sock = danp_socket(DANP_TYPE_DGRAM);
         } else if (strcmp(type, "stream") == 0) {
-            sock = danpSocket(DANP_TYPE_STREAM);
+            sock = danp_socket(DANP_TYPE_STREAM);
         } else {
             shell_error(shell, "Invalid type");
             ret = -EINVAL;
@@ -155,7 +155,7 @@ static int danp_test(const struct shell *shell, size_t argc, char **argv)
             break;
         }
 
-        int ret = danpConnect(sock, id, dPort);
+        int ret = danp_connect(sock, id, dPort);
         if (ret < 0) {
             shell_error(shell, "Failed to connect socket");
             ret = -ECONNREFUSED;
@@ -164,7 +164,7 @@ static int danp_test(const struct shell *shell, size_t argc, char **argv)
 
         tx_buf = k_malloc(DANP_MAX_PACKET_SIZE);
         rx_buf = k_malloc(DANP_MAX_PACKET_SIZE);
-    
+
         if (!tx_buf || !rx_buf) {
             ret = -ENOMEM;
             break;
@@ -176,17 +176,17 @@ static int danp_test(const struct shell *shell, size_t argc, char **argv)
 
         for (int i = 0; i < count; i++) {
             // Check for abort (allows user to Ctrl+C if shell supports it, or system shutdown)
-            if (k_is_in_isr()) break; 
+            if (k_is_in_isr()) break;
 
             shell_print(shell, "Iteration %d/%d", i + 1, count);
 
-            int ret = danpSend(sock, tx_buf, size);
+            int ret = danp_send(sock, tx_buf, size);
             if (ret < 0) {
                 shell_error(shell, "Send failed iter %d", i);
                 // Decide: break or continue?
             } else {
                 // Only try to receive if send was okay
-                ret = danpRecv(sock, rx_buf, DANP_MAX_PACKET_SIZE, 2000);
+                ret = danp_recv(sock, rx_buf, DANP_MAX_PACKET_SIZE, 2000);
                 if (ret < 0) {
                     shell_warn(shell, "Recv timeout/fail iter %d", i + 1);
                 } else {
@@ -214,7 +214,7 @@ static int danp_test(const struct shell *shell, size_t argc, char **argv)
 
     if (sock)
     {
-        danpClose(sock);
+        danp_close(sock);
     }
     if (tx_buf)
     {
@@ -224,13 +224,13 @@ static int danp_test(const struct shell *shell, size_t argc, char **argv)
     {
         k_free(rx_buf);
     }
-    
+
     shell_print(shell, "Test complete");
-    
+
     return 0;
 }
 
 static int danp_stats(const struct shell *shell, size_t argc, char **argv) {
-    danpPrintStats((void (*)(const char *, ...))danp_print_func);
+    danp_print_stats((void (*)(const char *, ...))danp_print_func);
     return 0;
 }
