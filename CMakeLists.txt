@@ -5,6 +5,7 @@ list(APPEND ZEPHYR_EXTRA_MODULES
     ${CMAKE_CURRENT_SOURCE_DIR}/libraries/osal
     ${CMAKE_CURRENT_SOURCE_DIR}/libraries/danp
     ${CMAKE_CURRENT_SOURCE_DIR}/libraries/zephyr_radio
+    ${CMAKE_CURRENT_SOURCE_DIR}/libraries/zephyr_tmtc
 )
 
 find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
@@ -19,6 +20,7 @@ set(SOURCES
     src/client.c
     src/utilities.c
     src/shell.c
+    src/tmtc.c
 )
 
 set(INCLUDE_DIRS
