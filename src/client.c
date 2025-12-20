@@ -46,7 +46,7 @@ void client_thread(void *p1, void *p2, void *p3)
     printk("Client: Starting...\n");
 
     while (1) {
-        sock = danp_socket(DANP_TYPE_STREAM);
+        sock = danp_socket(DANP_TYPE_DGRAM);
         if (!sock) {
             printk("Client: Failed to create socket\n");
             k_sleep(K_SECONDS(1));
@@ -54,13 +54,13 @@ void client_thread(void *p1, void *p2, void *p3)
         }
 
         printk("Client: Connecting to server...\n");
-        ret = danp_connect(sock, LOCAL_NODE, SERVER_STREAM_PORT);
+        ret = danp_connect(sock, REMOTE_NODE_ID, SERVER_DGRAM_PORT);
         if (ret == 0) {
             printk("Client: Connected\n");
 
             sprintf(msg, "Message %d from client", msgCount++);
             printk("Client: Sending '%s'\n", msg);
-            dan_send(sock, msg, strlen(msg));
+            danp_send(sock, msg, strlen(msg));
 
             received = danp_recv(sock, buffer, sizeof(buffer), 1000);
             if (received > 0) {
@@ -76,7 +76,7 @@ void client_thread(void *p1, void *p2, void *p3)
             danp_close(sock);
         }
 
-        k_sleep(K_SECONDS(2));
+        k_sleep(K_SECONDS(5));
     }
 }
 
@@ -86,9 +86,9 @@ int32_t client_init(void)
 
     for (;;)
     {
-        // k_thread_create(&client_data, client_stack, K_THREAD_STACK_SIZEOF(client_stack),
-        //         client_thread, NULL, NULL, NULL,
-        //         PRIORITY, 0, K_NO_WAIT);
+        k_thread_create(&client_data, client_stack, K_THREAD_STACK_SIZEOF(client_stack),
+                client_thread, NULL, NULL, NULL,
+                PRIORITY, 0, K_NO_WAIT);
 
         break;
     }

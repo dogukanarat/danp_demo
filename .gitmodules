@@ -7,3 +7,6 @@
 [submodule "libraries/zephyr-radio"]
 	path = libraries/zephyr-radio
 	url = https://github.com/dogukanarat/zephyr-radio
+[submodule "libraries/danp_ftp"]
+	path = libraries/danp_ftp
+	url = git@github.com:dogukanarat/danp_ftp.git

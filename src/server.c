@@ -75,8 +75,8 @@ void server_stream_thread(void *p1, void *p2, void *p3)
 
     while (1)
     {
-        LOG_DBG("Waiting for client connection...");
-        ramData->clientSock = danp_accept(ramData->serverSock, DANP_WAIT_FOREVER);
+        LOG_DBG("Waiting for connection...");
+        ramData->clientSock = danp_accept(ramData->serverSock, 3000);
         if (ramData->clientSock)
         {
             LOG_INF("Client connected");
@@ -131,7 +131,7 @@ void server_dgram_thread(void *p1, void *p2, void *p3)
             sizeof(ramData->buffer),
             &dstNode,
             &dstPort,
-            DANP_WAIT_FOREVER);
+            3000);
         if (ramData->received >= 0)
         {
             LOG_INF("Received %d bytes from client", ramData->received);

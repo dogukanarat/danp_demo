@@ -35,7 +35,7 @@
 
 static const struct device *const radio = DEVICE_DT_GET(DT_ALIAS(radio0));
 
-static ralf_params_lora_t defaukt_lora_rx_param = {
+static ralf_params_lora_t default_lora_rx_param = {
     .mod_params =
         {
             .sf = RAL_LORA_SF8,
@@ -94,91 +94,125 @@ static const ralf_params_lora_cad_t default_lora_cad_param = {
     .invert_iq_is_on = false,
 };
 
+static danp_lo_interface_t iface_radio;
+
 /* Functions */
 
-int rx_thread(const struct device *radio)
+// int rx_thread(const struct device *radio)
+// {
+//     int ret = 0;
+//     ralf_params_lora_t rx_params = {0};
+//     struct radio_ctrl_stats stats = {0};
+//     struct radio_ctrl_msg_stats msg_stats = {0};
+
+//     radio_ctrl_flush_rx_queue(radio);
+
+//     radio_ctrl_listen(radio, UINT32_MAX);
+//     uint8_t payload[255] = {0};
+
+//     ret = radio_ctrl_receive(radio, payload, sizeof(payload), &msg_stats, UINT32_MAX);
+//     if (ret > 0) {
+//         // Successful reception
+//         printk("Received payload: ");
+//         for (size_t i = 0; i < ret; i++) {
+//             printk("%02X ", payload[i]);
+//         }
+//         printk("\n");
+//         printk("RSSI: %d dBm, SNR: %d dB, Signal RSSI: %d dBm\n",
+//                 msg_stats.rssi, msg_stats.snr, msg_stats.signal_rssi);
+//     } else {
+//         // Reception error
+//         printk("Receive error: %d\n", ret);
+//     }
+
+//     return 0;
+// }
+
+// int tx_thread(const struct device *radio)
+// {
+//     int ret = 0;
+//     struct radio_ctrl_stats stats = {0};
+//     uint8_t payload[] = "hello";
+
+//     radio_ctrl_transmit(radio, payload, sizeof(payload));
+//     radio_ctrl_get_stats(radio, &stats);
+//     printk("TX Success: %d/%d, TX Timeout: %d/%d\n", stats.tx_success, stats.tx_attempts, stats.tx_timeout, stats.tx_attempts);
+
+//     return 0;
+// }
+
+static void configure_route(uint16_t destination, const char *iface_name)
 {
-    int ret = 0;
-    ralf_params_lora_t rx_params = {0};
-    struct radio_ctrl_stats stats = {0};
-    struct radio_ctrl_msg_stats msg_stats = {0};
-
-    radio_ctrl_flush_rx_queue(radio);
-
-    radio_ctrl_listen(radio, UINT32_MAX);
-    uint8_t payload[255] = {0};
-
-    ret = radio_ctrl_receive(radio, payload, sizeof(payload), &msg_stats, UINT32_MAX);
-    if (ret > 0) {
-        // Successful reception
-        printk("Received payload: ");
-        for (size_t i = 0; i < ret; i++) {
-            printk("%02X ", payload[i]);
-        }
-        printk("\n");
-        printk("RSSI: %d dBm, SNR: %d dB, Signal RSSI: %d dBm\n",
-                msg_stats.rssi, msg_stats.snr, msg_stats.signal_rssi);
-    } else {
-        // Reception error
-        printk("Receive error: %d\n", ret);
+    char table_entry[32];
+    int written = snprintf(table_entry, sizeof(table_entry), "%u:%s", destination, iface_name);
+    if (written <= 0 || written >= (int)sizeof(table_entry))
+    {
+        printf("[Server] Failed to format route entry for destination %u\n", destination);
+        return;
     }
 
-    return 0;
-}
-
-int tx_thread(const struct device *radio)
-{
-    int ret = 0;
-    struct radio_ctrl_stats stats = {0};
-    uint8_t payload[] = "hello";
-
-    radio_ctrl_transmit(radio, payload, sizeof(payload));
-    radio_ctrl_get_stats(radio, &stats);
-    printk("TX Success: %d/%d, TX Timeout: %d/%d\n", stats.tx_success, stats.tx_attempts, stats.tx_timeout, stats.tx_attempts);
-
-    return 0;
+    if (danp_route_table_load(table_entry) != 0)
+    {
+        printf("[Server] Failed to install route '%s'\n", table_entry);
+    }
+    else
+    {
+        printf("[Server] Installed static route: %s\n", table_entry);
+    }
 }
 
 int main(void) {
-    int ret;
+    int ret = 0;
 
     if (!device_is_ready(radio)) {
         printk("Radio not ready\n");
         return 0;
     }
 
-    defaukt_lora_rx_param.mod_params.ldro = ral_compute_lora_ldro(
-        defaukt_lora_rx_param.mod_params.sf, defaukt_lora_rx_param.mod_params.bw);
+    default_lora_rx_param.mod_params.ldro = ral_compute_lora_ldro(
+        default_lora_rx_param.mod_params.sf, default_lora_rx_param.mod_params.bw);
     default_lora_tx_param.mod_params.ldro = ral_compute_lora_ldro(
         default_lora_tx_param.mod_params.sf, default_lora_tx_param.mod_params.bw);
 
-    radio_ctrl_set_config_lora(radio, &defaukt_lora_rx_param, &default_lora_tx_param,
-                    &default_lora_cad_param);
+    danp_radio_init (
+        &iface_radio,
+        radio,
+        &default_lora_rx_param,
+        &default_lora_tx_param,
+        &default_lora_cad_param,
+        OWN_NODE_ID);
+    danp_register_interface((danp_interface_t *)&iface_radio);
 
-    printk("DANP Demo Application\n");
+    configure_route(REMOTE_NODE_ID, iface_radio.common.name);
 
-    danp_lo_interface_t ifaceLo;
     danp_config_t config = {
-        .local_node = LOCAL_NODE,
+        .local_node = OWN_NODE_ID,
         .log_function = danp_log_message_impl,
     };
-
-    danp_lo_init(&ifaceLo, LOCAL_NODE);
     danp_init(&config);
-    danp_register_interface(&ifaceLo);
 
+#if SERVER_MODE == 1
+    printk("Starting DANP server...\n");
     server_init();
-    client_init();
-
-    while (1) {
-#if RX_MODE == 1
-        rx_thread(radio);
-#elif TX_MODE == 1
-        tx_thread(radio);
-        k_sleep(K_MSEC(5000));
 #else
-        printk("Please define RX_MODE or TX_MODE\n");
+    printk("Starting DANP client...\n");
+    client_init();
 #endif
+
+//     while (1) {
+// #if RX_MODE == 1
+//         rx_thread(radio);
+// #elif TX_MODE == 1
+//         tx_thread(radio);
+//         k_sleep(K_MSEC(5000));
+// #else
+//         printk("Please define RX_MODE or TX_MODE\n");
+// #endif
+//     }
+
+    while (1)
+    {
+        k_sleep(K_MSEC(1000));
     }
 
     return 0;
