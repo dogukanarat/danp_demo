@@ -10,3 +10,6 @@
 [submodule "libraries/zephyr_radio"]
 	path = libraries/zephyr_radio
 	url = git@github.com:dogukanarat/zephyr_radio.git
+[submodule "libraries/zephyr_tmtc"]
+	path = libraries/zephyr_tmtc
+	url = git@github.com:dogukanarat/zephyr_tmtc.git
