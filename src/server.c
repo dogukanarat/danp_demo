@@ -6,20 +6,20 @@
 
 #include <zephyr/kernel.h>
 #include <zephyr/drivers/gpio.h>
-#include <zephyr/sys/printk.h>
 #include <zephyr/logging/log.h>
 
 #include "danp/danp.h"
 #include "common_definitions.h"
 #include "server.h"
 
-LOG_MODULE_REGISTER(server, LOG_LEVEL_DBG);
-
 /* Imports */
 
 
 /* Definitions */
 
+LOG_MODULE_REGISTER(server, LOG_LEVEL_DBG);
+
+#define SERVER_TIMEOUT_MS  8000
 
 /* Types */
 
@@ -75,8 +75,8 @@ void server_stream_thread(void *p1, void *p2, void *p3)
 
     while (1)
     {
-        LOG_DBG("Waiting for connection...");
-        ramData->clientSock = danp_accept(ramData->serverSock, 3000);
+        LOG_INF("Waiting for connection...");
+        ramData->clientSock = danp_accept(ramData->serverSock, SERVER_TIMEOUT_MS);
         if (ramData->clientSock)
         {
             LOG_INF("Client connected");
@@ -124,14 +124,14 @@ void server_dgram_thread(void *p1, void *p2, void *p3)
 
     while (1)
     {
-        LOG_DBG("Waiting for datagram...");
+        LOG_INF("Waiting for datagram...");
         ramData->received = danp_recv_from(
             ramData->serverSock,
             ramData->buffer,
             sizeof(ramData->buffer),
             &dstNode,
             &dstPort,
-            3000);
+            SERVER_TIMEOUT_MS);
         if (ramData->received >= 0)
         {
             LOG_INF("Received %d bytes from client", ramData->received);

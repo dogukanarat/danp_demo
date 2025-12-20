@@ -9,13 +9,12 @@
 #include <zephyr/logging/log.h>
 #include "danp/danp.h"
 
-LOG_MODULE_REGISTER(danp, LOG_LEVEL_DBG);
-
 /* Imports */
 
 
 /* Definitions */
 
+LOG_MODULE_DECLARE(danp);
 
 /* Types */
 

@@ -6,7 +6,7 @@
 
 #include <zephyr/kernel.h>
 #include <zephyr/drivers/gpio.h>
-#include <zephyr/sys/printk.h>
+#include <zephyr/logging/log.h>
 
 #include "danp/danp.h"
 #include "common_definitions.h"
@@ -17,6 +17,7 @@
 
 /* Definitions */
 
+LOG_MODULE_REGISTER(client, LOG_LEVEL_DBG);
 
 /* Types */
 
@@ -43,36 +44,36 @@ void client_thread(void *p1, void *p2, void *p3)
     // Give server time to start
     k_sleep(K_SECONDS(1));
 
-    printk("Client: Starting...\n");
+    LOG_INF("Starting...");
 
     while (1) {
         sock = danp_socket(DANP_TYPE_DGRAM);
         if (!sock) {
-            printk("Client: Failed to create socket\n");
+            LOG_ERR("Failed to create socket");
             k_sleep(K_SECONDS(1));
             continue;
         }
 
-        printk("Client: Connecting to server...\n");
+        LOG_INF("Connecting to server...");
         ret = danp_connect(sock, REMOTE_NODE_ID, SERVER_DGRAM_PORT);
         if (ret == 0) {
-            printk("Client: Connected\n");
+            LOG_INF("Connected");
 
             sprintf(msg, "Message %d from client", msgCount++);
-            printk("Client: Sending '%s'\n", msg);
+            LOG_INF("Sending '%s'", msg);
             danp_send(sock, msg, strlen(msg));
 
             received = danp_recv(sock, buffer, sizeof(buffer), 1000);
             if (received > 0) {
                 buffer[received] = '\0';
-                printk("Client: Received echo '%s'\n", buffer);
+                LOG_INF("Received echo '%s'", buffer);
             } else {
-                printk("Client: Receive timeout or error\n");
+                LOG_ERR("Receive timeout or error");
             }
 
             danp_close(sock);
         } else {
-            printk("Client: Failed to connect\n");
+            LOG_ERR("Failed to connect");
             danp_close(sock);
         }
 

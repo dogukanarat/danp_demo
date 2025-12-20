@@ -15,6 +15,8 @@
 
 /* Definitions */
 
+LOG_MODULE_REGISTER(danp, LOG_LEVEL_DBG);
+
 #define DANP_LOG_SEVERITY DANP_LOG_VERBOSE
 
 /* Types */
@@ -34,20 +36,25 @@ void danp_log_message_impl(
     const char *message,
     va_list args)
 {
-    if (level < DANP_LOG_SEVERITY) {
-        return; // Filter out verbose logs
-    }
-    const char *color;
+    char log_buf[256];
+    vsnprintf(log_buf, sizeof(log_buf), message, args);
+
     switch (level) {
-        case DANP_LOG_ERROR:   color = "\x1B[31m"; break; // Red
-        case DANP_LOG_WARN:    color = "\x1B[33m"; break; // Yellow
-        case DANP_LOG_INFO:    color = "\x1B[32m"; break; // Green
-        case DANP_LOG_VERBOSE: color = "\x1B[36m"; break; // Cyan
-        default:               color = "\x1B[0m";  break; // Reset
+    case DANP_LOG_ERROR:
+        LOG_ERR("%s", log_buf);
+        break;
+    case DANP_LOG_WARN:
+        LOG_WRN("%s", log_buf);
+        break;
+    case DANP_LOG_INFO:
+        LOG_INF("%s", log_buf);
+        break;
+    case DANP_LOG_DEBUG:
+    case DANP_LOG_VERBOSE:
+    default:
+        LOG_DBG("%s", log_buf);
+        break;
     }
-    printk("%s%s: ", color, funcName);
-    vprintk(message, args);
-    printk("\x1B[0m\n"); // Reset color
 
 }
 
