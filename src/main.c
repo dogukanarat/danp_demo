@@ -9,6 +9,7 @@
 #include <zephyr/kernel.h>
 #include <zephyr/sys/printk.h>
 #include "danp/drivers/danp_lo.h"
+#include "danp/drivers/danp_radio.h"
 #include "danp/danp.h"
 #include "common_definitions.h"
 #include "utilities.h"
@@ -94,7 +95,7 @@ static const ralf_params_lora_cad_t default_lora_cad_param = {
     .invert_iq_is_on = false,
 };
 
-static danp_lo_interface_t iface_radio;
+static danp_radio_interface_t iface_radio;
 
 /* Functions */
 

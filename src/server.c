@@ -31,21 +31,33 @@ typedef struct {
     int32_t received;
     char hexMsg[DANP_MAX_PACKET_SIZE * 2 + 1];
 } serverRamData_t;
+
 /* Forward Declarations */
 
 
 /* Variables */
 
+#if DGRAM_MODE == 0
 K_THREAD_STACK_DEFINE(server_stream_stack, STACK_SIZE);
 static struct k_thread server_stream_data;
+#endif /* DGRAM_MODE == 0 */
+
+#if DGRAM_MODE == 1
 K_THREAD_STACK_DEFINE(server_dgram_stack, STACK_SIZE);
 static struct k_thread server_dgram_data;
+#endif /* DGRAM_MODE == 1 */
 
+#if DGRAM_MODE == 0
 static serverRamData_t serverStreamRamData;
+#endif /* DGRAM_MODE == 0 */
+
+#if DGRAM_MODE == 1
 static serverRamData_t serverDgramRamData;
+#endif /* DGRAM_MODE == 1 */
 
 /* Functions */
 
+#if DGRAM_MODE == 0
 void server_stream_thread(void *p1, void *p2, void *p3)
 {
     serverRamData_t *ramData = (serverRamData_t *)p1;
@@ -99,7 +111,9 @@ void server_stream_thread(void *p1, void *p2, void *p3)
         }
     }
 }
+#endif /* DGRAM_MODE == 0 */
 
+#if DGRAM_MODE == 1
 void server_dgram_thread(void *p1, void *p2, void *p3)
 {
     serverRamData_t *ramData = (serverRamData_t *)p1;
@@ -141,6 +155,7 @@ void server_dgram_thread(void *p1, void *p2, void *p3)
         }
     }
 }
+#endif /* DGRAM_MODE == 1 */
 
 int32_t server_init(void)
 {
@@ -149,6 +164,7 @@ int32_t server_init(void)
 
     for (;;)
     {
+#if DGRAM_MODE == 0
         server_tid = k_thread_create(&server_stream_data, server_stream_stack, K_THREAD_STACK_SIZEOF(server_stream_stack),
                                      server_stream_thread, &serverStreamRamData, NULL, NULL,
                                      PRIORITY, 0, K_NO_WAIT);
@@ -157,7 +173,9 @@ int32_t server_init(void)
             status = -1; // Thread creation failed
             break;
         }
+#endif /* DGRAM_MODE == 0 */
 
+#if DGRAM_MODE == 1
         server_tid = k_thread_create(&server_dgram_data, server_dgram_stack, K_THREAD_STACK_SIZEOF(server_dgram_stack),
                                      server_dgram_thread, &serverDgramRamData, NULL, NULL,
                                      PRIORITY, 0, K_NO_WAIT);
@@ -166,6 +184,7 @@ int32_t server_init(void)
             status = -1; // Thread creation failed
             break;
         }
+#endif /* DGRAM_MODE == 1 */
 
         break;
     }

@@ -19,6 +19,17 @@
 
 LOG_MODULE_REGISTER(client, LOG_LEVEL_DBG);
 
+#if DGRAM_MODE == 0
+#define CLIENT_SOCKET_TYPE DANP_TYPE_STREAM
+#define CLIENT_SOCKET_PORT   SERVER_STREAM_PORT
+#endif /* DGRAM_MODE == 0 */
+
+#if DGRAM_MODE == 1
+#define CLIENT_SOCKET_TYPE DANP_TYPE_DGRAM
+#define CLIENT_SOCKET_PORT   SERVER_DGRAM_PORT
+#endif /* DGRAM_MODE == 1 */
+
+
 /* Types */
 
 
@@ -36,7 +47,7 @@ void client_thread(void *p1, void *p2, void *p3)
 {
     danp_socket_t *sock;
     int32_t ret;
-    char *msg[32];
+    char msg[32]; // Changed from char *msg[32] to char msg[32]
     uint32_t msgCount = 0;
     uint8_t buffer[DANP_MAX_PACKET_SIZE];
     int32_t received;
@@ -47,7 +58,7 @@ void client_thread(void *p1, void *p2, void *p3)
     LOG_INF("Starting...");
 
     while (1) {
-        sock = danp_socket(DANP_TYPE_DGRAM);
+        sock = danp_socket(CLIENT_SOCKET_TYPE);
         if (!sock) {
             LOG_ERR("Failed to create socket");
             k_sleep(K_SECONDS(1));
@@ -55,13 +66,13 @@ void client_thread(void *p1, void *p2, void *p3)
         }
 
         LOG_INF("Connecting to server...");
-        ret = danp_connect(sock, REMOTE_NODE_ID, SERVER_DGRAM_PORT);
+        ret = danp_connect(sock, REMOTE_NODE_ID, CLIENT_SOCKET_PORT);
         if (ret == 0) {
             LOG_INF("Connected");
 
-            sprintf(msg, "Message %d from client", msgCount++);
-            LOG_INF("Sending '%s'", msg);
-            danp_send(sock, msg, strlen(msg));
+            sprintf(msg, "Message %d from client", msgCount++); // Fixed type mismatch
+            LOG_INF("Sending '%s'", msg); // Fixed type mismatch
+            danp_send(sock, msg, strlen(msg)); // Fixed type mismatch
 
             received = danp_recv(sock, buffer, sizeof(buffer), 1000);
             if (received > 0) {

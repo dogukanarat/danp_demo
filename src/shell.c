@@ -4,10 +4,12 @@
 
 /* Includes */
 
+#include <stdlib.h>
 #include <zephyr/shell/shell.h>
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 #include "danp/danp.h"
+#include "utilities.h"
 
 /* Imports */
 
@@ -204,7 +206,7 @@ static int danp_test(const struct shell *shell, size_t argc, char **argv)
 
             // 4. Use the interval argument
             if (interval > 0) {
-                k_msleep(interval);
+                k_sleep(K_MSEC(interval));
             }
         }
 
