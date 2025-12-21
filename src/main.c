@@ -7,6 +7,7 @@
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/drivers/radio_ctrl.h>
 #include <zephyr/kernel.h>
+#include <zephyr/logging/log.h>
 #include <zephyr/sys/printk.h>
 #include "danp/drivers/danp_radio.h"
 #include "danp/danp.h"
@@ -18,7 +19,10 @@
 
 /* Imports */
 
+
 /* Definitions */
+
+LOG_MODULE_REGISTER(main, LOG_LEVEL_INF);
 
 /* The devicetree node identifier for the "led0" alias. */
 #define LED0_NODE DT_ALIAS(led0)
@@ -30,10 +34,13 @@
 
 /* Types */
 
+
 /* Forward Declarations */
+
 
 /* Variables */
 
+static const char route_table[] = "10:radio0, 20:radio0";
 static const struct device *const radio = DEVICE_DT_GET(DT_ALIAS(radio0));
 
 static ralf_params_lora_t default_lora_rx_param = {
@@ -106,7 +113,7 @@ danp_ftp_status_t ftp_fs_open(
     danp_ftp_service_fs_mode_t mode,
     void *user_data)
 {
-    /* Implement file open logic here */
+    LOG_INF("FTP FS Open called for file ID: %.*s", file_id_len, file_id);
     return DANP_FTP_STATUS_OK;
 }
 
@@ -114,7 +121,7 @@ danp_ftp_status_t ftp_fs_close(
     danp_ftp_file_handle_t file_handle,
     void *user_data)
 {
-    /* Implement file close logic here */
+    LOG_INF("FTP FS Close called");
     return DANP_FTP_STATUS_OK;
 }
 
@@ -125,7 +132,7 @@ danp_ftp_status_t ftp_fs_read(
     uint16_t length,
     void *user_data)
 {
-    /* Implement file read logic here */
+    LOG_INF("FTP FS Read called: offset=%u, length=%u", offset, length);
     return DANP_FTP_STATUS_OK;
 }
 
@@ -136,37 +143,15 @@ danp_ftp_status_t ftp_fs_write(
     uint16_t length,
     void *user_data)
 {
-    /* Implement file write logic here */
+    LOG_INF("FTP FS Write called: offset=%u, length=%u", offset, length);
     return DANP_FTP_STATUS_OK;
 }
-
-static void configure_route(uint16_t destination, const char *iface_name)
-{
-    char table_entry[32];
-    int written = snprintf(table_entry, sizeof(table_entry), "%u:%s", destination, iface_name);
-    if (written <= 0 || written >= (int)sizeof(table_entry))
-    {
-        printf("[Server] Failed to format route entry for destination %u\n", destination);
-        return;
-    }
-
-    if (danp_route_table_load(table_entry) != 0)
-    {
-        printf("[Server] Failed to install route '%s'\n", table_entry);
-    }
-    else
-    {
-        printf("[Server] Installed static route: %s\n", table_entry);
-    }
-}
-
-
 
 int main(void) {
     int ret = 0;
 
     if (!device_is_ready(radio)) {
-        printk("Radio not ready\n");
+        LOG_ERR("Radio not ready\n");
         return 0;
     }
 
@@ -175,8 +160,9 @@ int main(void) {
     default_lora_tx_param.mod_params.ldro = ral_compute_lora_ldro(
         default_lora_tx_param.mod_params.sf, default_lora_tx_param.mod_params.bw);
 
-    ret = danp_radio_init (
+    ret = danp_radio_init(
         &iface_radio,
+        "radio0",
         radio,
         &default_lora_rx_param,
         &default_lora_tx_param,
@@ -184,12 +170,19 @@ int main(void) {
         OWN_NODE_ID);
     if (ret < 0)
     {
-        printk("Failed to initialize DANP radio interface: %d\n", ret);
+        LOG_ERR("Failed to initialize DANP radio interface: %d\n", ret);
         return 0;
     }
     danp_register_interface((danp_interface_t *)&iface_radio);
 
-    configure_route(REMOTE_NODE_ID, iface_radio.common.name);
+    if (danp_route_table_load(route_table) != 0)
+    {
+        LOG_ERR("Failed to install route '%s'", route_table);
+    }
+    else
+    {
+        LOG_INF("Installed static route: %s", route_table);
+    }
 
     danp_config_t danp_config = {
         .local_node = OWN_NODE_ID,
@@ -207,17 +200,17 @@ int main(void) {
     ret = danp_ftp_service_init(&danp_ftp_service_config);
     if (ret < 0)
     {
-        printk("Failed to initialize DANP FTP service: %d\n", ret);
+        LOG_ERR("Failed to initialize DANP FTP service: %d\n", ret);
         return 0;
     }
 
-#if SERVER_MODE == 1
-    printk("Starting DANP server...\n");
-    server_init();
-#else
-    printk("Starting DANP client...\n");
-    client_init();
-#endif
+// #if SERVER_MODE == 1
+//     printk("Starting DANP server...\n");
+//     server_init();
+// #else
+//     printk("Starting DANP client...\n");
+//     client_init();
+// #endif
 
     while (1)
     {
