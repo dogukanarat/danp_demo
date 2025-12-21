@@ -10,17 +10,13 @@
     "**/build/**": true,
     "**/out/**": true,
     "**/.git/**": true
-  }
+  },
   "clangd.arguments": [
     "--compile-commands-dir=${workspaceFolder}/build",
     "--background-index",
     "--header-insertion=never",
     "--clang-tidy=false"
   ],
-
-  // ---- If you keep MS C/C++ installed, disable its IntelliSense to avoid duplicate parsing ----
   "C_Cpp.intelliSenseEngine": "disabled",
-
-  // Optional: still let MS extension do browsing if you want
   "C_Cpp.default.compileCommands": "${workspaceFolder}/build/compile_commands.json"
 }

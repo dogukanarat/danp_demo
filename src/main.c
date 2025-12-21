@@ -8,9 +8,9 @@
 #include <zephyr/drivers/radio_ctrl.h>
 #include <zephyr/kernel.h>
 #include <zephyr/sys/printk.h>
-#include "danp/drivers/danp_lo.h"
 #include "danp/drivers/danp_radio.h"
 #include "danp/danp.h"
+#include "danp/ftp/danp_ftp_service.h"
 #include "common_definitions.h"
 #include "utilities.h"
 #include "server.h"
@@ -99,48 +99,46 @@ static danp_radio_interface_t iface_radio;
 
 /* Functions */
 
-// int rx_thread(const struct device *radio)
-// {
-//     int ret = 0;
-//     ralf_params_lora_t rx_params = {0};
-//     struct radio_ctrl_stats stats = {0};
-//     struct radio_ctrl_msg_stats msg_stats = {0};
+danp_ftp_status_t ftp_fs_open(
+    danp_ftp_file_handle_t *file_handle,
+    const uint8_t *file_id,
+    size_t file_id_len,
+    danp_ftp_service_fs_mode_t mode,
+    void *user_data)
+{
+    /* Implement file open logic here */
+    return DANP_FTP_STATUS_OK;
+}
 
-//     radio_ctrl_flush_rx_queue(radio);
+danp_ftp_status_t ftp_fs_close(
+    danp_ftp_file_handle_t file_handle,
+    void *user_data)
+{
+    /* Implement file close logic here */
+    return DANP_FTP_STATUS_OK;
+}
 
-//     radio_ctrl_listen(radio, UINT32_MAX);
-//     uint8_t payload[255] = {0};
+danp_ftp_status_t ftp_fs_read(
+    danp_ftp_file_handle_t file_handle,
+    size_t offset,
+    uint8_t *buffer,
+    uint16_t length,
+    void *user_data)
+{
+    /* Implement file read logic here */
+    return DANP_FTP_STATUS_OK;
+}
 
-//     ret = radio_ctrl_receive(radio, payload, sizeof(payload), &msg_stats, UINT32_MAX);
-//     if (ret > 0) {
-//         // Successful reception
-//         printk("Received payload: ");
-//         for (size_t i = 0; i < ret; i++) {
-//             printk("%02X ", payload[i]);
-//         }
-//         printk("\n");
-//         printk("RSSI: %d dBm, SNR: %d dB, Signal RSSI: %d dBm\n",
-//                 msg_stats.rssi, msg_stats.snr, msg_stats.signal_rssi);
-//     } else {
-//         // Reception error
-//         printk("Receive error: %d\n", ret);
-//     }
-
-//     return 0;
-// }
-
-// int tx_thread(const struct device *radio)
-// {
-//     int ret = 0;
-//     struct radio_ctrl_stats stats = {0};
-//     uint8_t payload[] = "hello";
-
-//     radio_ctrl_transmit(radio, payload, sizeof(payload));
-//     radio_ctrl_get_stats(radio, &stats);
-//     printk("TX Success: %d/%d, TX Timeout: %d/%d\n", stats.tx_success, stats.tx_attempts, stats.tx_timeout, stats.tx_attempts);
-
-//     return 0;
-// }
+danp_ftp_status_t ftp_fs_write(
+    danp_ftp_file_handle_t file_handle,
+    size_t offset,
+    const uint8_t *data,
+    uint16_t length,
+    void *user_data)
+{
+    /* Implement file write logic here */
+    return DANP_FTP_STATUS_OK;
+}
 
 static void configure_route(uint16_t destination, const char *iface_name)
 {
@@ -162,6 +160,8 @@ static void configure_route(uint16_t destination, const char *iface_name)
     }
 }
 
+
+
 int main(void) {
     int ret = 0;
 
@@ -175,22 +175,41 @@ int main(void) {
     default_lora_tx_param.mod_params.ldro = ral_compute_lora_ldro(
         default_lora_tx_param.mod_params.sf, default_lora_tx_param.mod_params.bw);
 
-    danp_radio_init (
+    ret = danp_radio_init (
         &iface_radio,
         radio,
         &default_lora_rx_param,
         &default_lora_tx_param,
         &default_lora_cad_param,
         OWN_NODE_ID);
+    if (ret < 0)
+    {
+        printk("Failed to initialize DANP radio interface: %d\n", ret);
+        return 0;
+    }
     danp_register_interface((danp_interface_t *)&iface_radio);
 
     configure_route(REMOTE_NODE_ID, iface_radio.common.name);
 
-    danp_config_t config = {
+    danp_config_t danp_config = {
         .local_node = OWN_NODE_ID,
         .log_function = danp_log_message_impl,
     };
-    danp_init(&config);
+    danp_init(&danp_config);
+
+    danp_ftp_service_config_t danp_ftp_service_config = {
+        .fs.open = ftp_fs_open,
+        .fs.close = ftp_fs_close,
+        .fs.read = ftp_fs_read,
+        .fs.write = ftp_fs_write,
+        .user_data = NULL,
+    };
+    ret = danp_ftp_service_init(&danp_ftp_service_config);
+    if (ret < 0)
+    {
+        printk("Failed to initialize DANP FTP service: %d\n", ret);
+        return 0;
+    }
 
 #if SERVER_MODE == 1
     printk("Starting DANP server...\n");
@@ -199,17 +218,6 @@ int main(void) {
     printk("Starting DANP client...\n");
     client_init();
 #endif
-
-//     while (1) {
-// #if RX_MODE == 1
-//         rx_thread(radio);
-// #elif TX_MODE == 1
-//         tx_thread(radio);
-//         k_sleep(K_MSEC(5000));
-// #else
-//         printk("Please define RX_MODE or TX_MODE\n");
-// #endif
-//     }
 
     while (1)
     {

@@ -70,7 +70,6 @@ static int danp_transaction(const struct shell *shell, size_t argc, char **argv)
         return -EINVAL;
     }
 
-    danp_socket_t *sock;
     int32_t ret;
     uint8_t buffer[DANP_MAX_PACKET_SIZE];
     int32_t received = 0;

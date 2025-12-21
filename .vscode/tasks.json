@@ -1,28 +1,36 @@
 {
-    // Zephyr build and flash tasks for VS Code
-    "version": "2.0.0",
-    "tasks": [
-        {
-            "label": "Zephyr: Build",
-            "type": "shell",
-            "command": "west build -b nucleo_l476rg",
-            "group": "build",
-            "problemMatcher": []
-        },
-        {
-            "label": "Zephyr: Flash",
-            "type": "shell",
-            "command": "west flash",
-            "group": "build",
-            "dependsOn": ["Zephyr: Build"],
-            "problemMatcher": []
-        },
-        {
-            "label": "Zephyr: Clean",
-            "type": "shell",
-            "command": "west build -t clean",
-            "group": "none",
-            "problemMatcher": []
-        }
-    ]
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "west: build",
+      "type": "shell",
+      "command": "west build -b nucleo_l476rg -p auto",
+      "problemMatcher": "$gcc",
+      "group": { "kind": "build", "isDefault": true }
+    },
+    {
+      "label": "west: pristine",
+      "type": "shell",
+      "command": "west build -t pristine",
+      "problemMatcher": []
+    },
+    {
+      "label": "west: menuconfig",
+      "type": "shell",
+      "command": "west build -t menuconfig",
+      "problemMatcher": []
+    },
+    {
+      "label": "west: flash",
+      "type": "shell",
+      "command": "west flash",
+      "problemMatcher": []
+    },
+    {
+      "label": "west: debugserver",
+      "type": "shell",
+      "command": "west debugserver",
+      "problemMatcher": []
+    }
+  ]
 }

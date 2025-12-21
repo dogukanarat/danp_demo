@@ -14,7 +14,7 @@
                 "target/stm32l4x.cfg"
             ],
             "runToEntryPoint": "main",
-            "preLaunchTask": "Zephyr: Build",
+            "preLaunchTask": "west: build",
             "svdFile": "",
             "armToolchainPath": "",
             "showDevDebugOutput": "none"

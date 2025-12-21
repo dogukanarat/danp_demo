@@ -13,3 +13,6 @@
 [submodule "libraries/zephyr_tmtc"]
 	path = libraries/zephyr_tmtc
 	url = git@github.com:dogukanarat/zephyr_tmtc.git
+[submodule "libraries/ctrl_freak_lite"]
+	path = libraries/ctrl_freak_lite
+	url = git@github.com:dogukanarat/ctrl_freak_lite.git
