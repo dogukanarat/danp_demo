@@ -13,11 +13,18 @@
                 "interface/stlink.cfg",
                 "target/stm32l4x.cfg"
             ],
+            "openOCDPreConfigLaunchCommands": [
+                "reset_config srst_only srst_nogate connect_assert_srst"
+            ],
+            "showDevDebugOutput": "parsed",
             "runToEntryPoint": "main",
             "preLaunchTask": "west: build",
             "svdFile": "",
             "armToolchainPath": "",
-            "showDevDebugOutput": "none"
+            "openOCDLaunchCommands": [
+                // "hla_serial 066DFF555349898667241427"
+                "hla_serial 0669FF555349898667212127"
+            ],
         }
     ]
 }

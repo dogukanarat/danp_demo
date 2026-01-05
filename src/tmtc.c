@@ -18,7 +18,7 @@
 
 /* Forward Declarations */
 
-static int32_t main_tmtc_test (struct tmtc_args *rqst, struct tmtc_args *rply);
+static int32_t main_tmtc_echo (struct tmtc_args *rqst, struct tmtc_args *rply);
 
 /* Variables */
 
@@ -28,13 +28,13 @@ TMTC_DEFINE(tmtc_example_cmd_handler) =
         .id = 1,
         .max_data_len = 256,
         .min_data_len = 0,
-        .handler = main_tmtc_test,
+        .handler = main_tmtc_echo,
     }
 };
 
 /* Functions */
 
-static int32_t main_tmtc_test (struct tmtc_args *rqst, struct tmtc_args *rply)
+static int32_t main_tmtc_echo (struct tmtc_args *rqst, struct tmtc_args *rply)
 {
     int32_t ret = 0;
 

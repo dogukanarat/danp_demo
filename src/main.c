@@ -9,13 +9,15 @@
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 #include <zephyr/sys/printk.h>
-#include "danp/drivers/danp_radio.h"
+
+#include "cfl/services/cfl_service_danp.h"
+#include "danp/drivers/danp_z_radio.h"
 #include "danp/danp.h"
+#include "danp/danp_log.h"
 #include "danp/ftp/danp_ftp_service.h"
+#include "cfl/cfl_utilities.h"
+
 #include "common_definitions.h"
-#include "utilities.h"
-#include "server.h"
-#include "client.h"
 
 /* Imports */
 
@@ -204,13 +206,15 @@ int main(void) {
         return 0;
     }
 
-// #if SERVER_MODE == 1
-//     printk("Starting DANP server...\n");
-//     server_init();
-// #else
-//     printk("Starting DANP client...\n");
-//     client_init();
-// #endif
+    cfl_service_danp_config_t config = {
+        .port_id = CONFIG_CFL_SUPPORT_DANP_SERVICE_PORT,
+    };
+
+    ret = cfl_service_danp_init(&config);
+    if (ret != 0) {
+        LOG_ERR("Failed to initialize CFL DANP service: %d\n", ret);
+        return 0;
+    }
 
     while (1)
     {

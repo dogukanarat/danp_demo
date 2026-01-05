@@ -1,22 +1,2 @@
 {
-  "files.watcherExclude": {
-    "**/build/**": true,
-    "**/out/**": true,
-    "**/.git/**": true,
-    "**/.cache/**": true,
-    "**/node_modules/**": true
-  },
-  "search.exclude": {
-    "**/build/**": true,
-    "**/out/**": true,
-    "**/.git/**": true
-  },
-  "clangd.arguments": [
-    "--compile-commands-dir=${workspaceFolder}/build",
-    "--background-index",
-    "--header-insertion=never",
-    "--clang-tidy=false"
-  ],
-  "C_Cpp.intelliSenseEngine": "disabled",
-  "C_Cpp.default.compileCommands": "${workspaceFolder}/build/compile_commands.json"
 }
