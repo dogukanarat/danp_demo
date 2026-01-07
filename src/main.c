@@ -14,8 +14,7 @@
 #include "danp/drivers/danp_z_radio.h"
 #include "danp/danp.h"
 #include "danp/danp_log.h"
-#include "danp/ftp/danp_ftp_service.h"
-#include "cfl/cfl_utilities.h"
+#include "danp/services/danp_ftp_service.h"
 
 #include "common_definitions.h"
 
