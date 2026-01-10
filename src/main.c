@@ -188,6 +188,7 @@ int main(void) {
     danp_config_t danp_config = {
         .local_node = OWN_NODE_ID,
         .log_function = danp_log_message_impl,
+        .log_function_io = danp_log_message_io_impl,
     };
     danp_init(&danp_config);
 
